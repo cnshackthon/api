@@ -1,0 +1,515 @@
+openapi: 3.0.0
+info:
+  title: Ndscf_DataRepository
+  version: 1.0.0
+  description: |
+    Ndscf Data Repository Service.
+    © 2021, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+    All rights reserved.
+
+externalDocs:
+  description: DSCF Services
+  url: "/"
+
+servers:
+  - url: "{apiRoot}/ndscf/v1"
+    variables:
+      apiRoot:
+        default: https://example.com
+        description: apiRoot as defined in clause 4.4 of 3GPP TS 29.501
+
+security:
+  - {}
+  - oAuth2ClientCredentials:
+      - ndscf
+
+paths:
+  /correlation/{ueId}:
+    summary: correlation between ueId and subIDs
+    description: Add or delete correlation
+    put:
+      summary: Create/Modify correlation between ueId and subIDs
+      description: Create or Modify correlation between ueId and subIDs
+      operationId: CreateOrModifyCorrelation
+      tags:
+        - ueId CRUD
+      parameters:
+        - name: ueId
+          in: path
+          description: Identifier(name) of the ue
+          required: true
+          schema:
+            $ref: "TS29571_CommonData.yaml#/components/schemas/Supi"
+            example: imsi-999559807001001
+      requestBody:
+        $ref: '#/components/schemas/SubIds'
+      responses:
+        "204":
+          description: Successful acknowledgement
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          description: Unexpected error
+    delete:
+      summary: Delete a Record with an user provided RecordId
+      operationId: DeleteRecord
+      tags:
+        - Record CRUD
+      parameters:
+        - name: ueId
+          in: path
+          description: Identifier(name) of the ue
+          required: true
+          schema:
+            $ref: "TS29571_CommonData.yaml#/components/schemas/Supi"
+            example: imsi-999559807001001
+        - name: subIds
+          in: query
+          description: subIds
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            minItems: 1
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: Successful case.
+        "204":
+          description: Successful case.
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "401":
+          $ref: "TS29571_CommonData.yaml#/components/responses/401"
+        "403":
+          $ref: "TS29571_CommonData.yaml#/components/responses/403"
+        "404":
+          $ref: "TS29571_CommonData.yaml#/components/responses/404"
+        "408":
+          $ref: "TS29571_CommonData.yaml#/components/responses/408"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          $ref: "TS29571_CommonData.yaml#/components/responses/default"    
+  /location/{subId}:
+    summary: Last reported location
+    description: Retrieve the last reported location of the subId
+    post:
+      operationId: getSubIdLocation
+      summary: Get last reported location
+      description: Get the last reported location of the subId
+      tags:
+        - subscriber
+        - location
+      parameters:
+        - name: subId
+          in: path
+          description: sub of the ue
+          required: true
+          schema:
+            type: string
+            example: ID-123456789
+      responses:
+        "200":
+          description: Subscriber location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationResponse"
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "404":
+          $ref: "TS29571_CommonData.yaml#/components/responses/404"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "501":
+          $ref: "TS29571_CommonData.yaml#/components/responses/501"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          description: Unexpected error
+  /storage/{subId}/records:
+    summary: Access to record of a subId
+    description: >-
+      Records of a subId
+    get:
+      summary: Records search with get
+      description: Retrieve Record based on filter
+      operationId: SearchRecord
+      tags:
+        - Record CRUD
+      parameters:
+        - name: subId
+          in: path
+          description: subId
+          required: true
+          schema:
+            type: string
+            example: ID-123456789
+        - name: limit-range
+          in: query
+          description: The most number of record references to fetch
+          schema:
+            $ref: "TS29571_CommonData.yaml#/components/schemas/Uinteger"
+        - name: filter
+          in: query
+          description: Query filter using conditions on tags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchExpression"
+      responses:
+        "200":
+          description: Successful case. Response contains result of the search.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: "#/components/schemas/Record"
+                minItems: 1
+        "204":
+          description: >-
+            The search condition does not match any Record.
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "401":
+          $ref: "TS29571_CommonData.yaml#/components/responses/401"
+        "403":
+          $ref: "TS29571_CommonData.yaml#/components/responses/403"
+        "404":
+          $ref: "TS29571_CommonData.yaml#/components/responses/404"
+        "406":
+          $ref: "TS29571_CommonData.yaml#/components/responses/406"
+        "429":
+          $ref: "TS29571_CommonData.yaml#/components/responses/429"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          $ref: "TS29571_CommonData.yaml#/components/responses/default"
+  /storage/{subId}/records/{recordId}:
+    summary: Access to a specific Record, identified by its RecordId
+    description: >-
+      Access to a specific Record        
+    put:
+      summary: Create/Modify Record
+      description: Create or Modify a Record with a user provided ueId
+      operationId: CreateOrModifyRecord
+      tags:
+        - Record CRUD
+      parameters:
+        - name: recordId
+          in: path
+          description: Identifier of the Record
+          required: true
+          schema:
+            type: string
+            example: 'UserRecordValue000000001'
+        - name: subId
+          in: path
+          description: subId
+          required: true
+          schema:
+            type: string
+            example: ID-123456789
+      requestBody:
+        $ref: "#/components/schemas/Record"
+      responses:
+        "200": # Update with return
+          $ref: "#/components/schemas/Record"
+        "201":
+          description: >-
+            Create case. The resource has been successfully created
+        "204": # Update without return
+          description: >-
+            Update case. The resource has been successfully updated and no
+            additional content is included in the response message.
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "401":
+          $ref: "TS29571_CommonData.yaml#/components/responses/401"
+        "403":
+          $ref: "TS29571_CommonData.yaml#/components/responses/403"
+        "404":
+          $ref: "TS29571_CommonData.yaml#/components/responses/404"
+        "408":
+          $ref: "TS29571_CommonData.yaml#/components/responses/408"
+        "413":
+          $ref: "TS29571_CommonData.yaml#/components/responses/413"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          $ref: "TS29571_CommonData.yaml#/components/responses/default"
+    get:
+      summary: Records search with get
+      description: Retrieve Record based on filter
+      operationId: SearchRecord
+      tags:
+        - Record CRUD
+      parameters:
+        - name: subId
+          in: path
+          description: subId
+          required: true
+          schema:
+            type: string
+            example: ID-123456789
+        - name: recordId
+          in: path
+          description: Identifier of the Record
+          required: true
+          schema:
+            type: string
+            example: 'UserRecordValue000000001'
+      responses:
+        "200":
+          description: Successful case. Response contains result of the search.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Record"
+        "204":
+          description: >-
+            The search condition does not match any Record.
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "401":
+          $ref: "TS29571_CommonData.yaml#/components/responses/401"
+        "403":
+          $ref: "TS29571_CommonData.yaml#/components/responses/403"
+        "404":
+          $ref: "TS29571_CommonData.yaml#/components/responses/404"
+        "406":
+          $ref: "TS29571_CommonData.yaml#/components/responses/406"
+        "429":
+          $ref: "TS29571_CommonData.yaml#/components/responses/429"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          $ref: "TS29571_CommonData.yaml#/components/responses/default"
+    delete:
+      summary: Delete a Record with an user provided RecordId
+      operationId: DeleteRecord
+      tags:
+        - Record CRUD
+      parameters:
+        - name: subId
+          in: path
+          description: subId
+          required: true
+          schema:
+            type: string
+            example: ID-123456789
+        - name: recordId
+          in: path
+          description: Identifier of the Record
+          required: true
+          schema:
+            type: string
+            example: 'UserRecordValue000000001'
+      responses:
+        "200":
+          description: Successful case.
+        "204":
+          description: Successful case.
+        "400":
+          $ref: "TS29571_CommonData.yaml#/components/responses/400"
+        "401":
+          $ref: "TS29571_CommonData.yaml#/components/responses/401"
+        "403":
+          $ref: "TS29571_CommonData.yaml#/components/responses/403"
+        "404":
+          $ref: "TS29571_CommonData.yaml#/components/responses/404"
+        "408":
+          $ref: "TS29571_CommonData.yaml#/components/responses/408"
+        "500":
+          $ref: "TS29571_CommonData.yaml#/components/responses/500"
+        "503":
+          $ref: "TS29571_CommonData.yaml#/components/responses/503"
+        default:
+          $ref: "TS29571_CommonData.yaml#/components/responses/default"
+
+components:
+  schemas:
+    SubIds:
+      type: array
+      items:
+        type: string
+      minItems: 1
+      uniqueItems: true
+    LocationResponse:
+      type: object
+      properties:
+        eventTime:
+          type: string
+          format: date-time
+        id:
+          type: string
+        locationInfo:
+          $ref: "#/components/schemas/LocationDetails"
+    LocationDetails:
+      type: object
+      properties:
+        ageOfLocationInfo:
+          type: string
+          pattern: /^[0-9]+$/
+        trackingAreaId:
+          type: string
+        plmnId:
+          type: string
+          pattern: /^[0-9]+$/
+        lat:
+          type: string
+        long:
+          type: string
+        elev:
+          type: string
+      example:
+        ageOfLocationInfo: "150"
+        trackingAreaId: "1234567890AB"
+        plmnId: "001001"
+        lat: "0.0"
+        long: "0.0"
+        elev: "123"
+
+    SearchExpression:
+      description: A logical expression element
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/SearchCondition"
+        - $ref: "#/components/schemas/SearchComparison"
+      example:
+        {
+          "cond": "OR",
+          "units":
+            [
+              { "op": "EQ", "tag": "ueId", "value": "455345" },
+              { "op": "EQ", "tag": "supi", "value": "imsi-999559807001001" },
+            ],
+        }
+
+    SearchCondition:
+      description: A logical condition
+      type: object
+      properties:
+        cond:
+          $ref: "#/components/schemas/ConditionOperator"
+        units:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchExpression"
+          minItems: 1
+      required:
+        - cond
+        - units
+      example:
+        {
+          "cond": "OR",
+          "units":
+            [
+              { "op": "EQ", "tag": "ueId", "value": "455345" },
+              { "op": "EQ", "tag": "supi", "value": "imsi-999559807001001" },
+            ],
+        }
+
+    SearchComparison:
+      description: A comparison to apply on tag/values pairs.
+      type: object
+      properties:
+        op:
+          $ref: "#/components/schemas/ComparisonOperator"
+        tag:
+          type: string
+        value:
+          type: string
+      required:
+        - op
+        - tag
+        - value
+      example: { "op": "EQ", "tag": "supi", "value": "imsi-999559807001001" }
+
+    ConditionOperator:
+      description: TBD
+      anyOf:
+        - type: string
+          enum:
+            - AND
+            - OR
+            - NOT
+        - type: string
+
+    ComparisonOperator:
+      description: TBD
+      anyOf:
+        - type: string
+          enum:
+            # Equals
+            - EQ
+            # Not Equal
+            - NEQ
+            # Greater Than
+            - GT
+            # Greater Than or Equal
+            - GTE
+            # Less Than
+            - LT
+            # Less Than or Equal
+            - LTE
+        - type: string
+    Record:
+      description: Definition of a Record. TODO:change to multipart
+      type: object
+      properties:
+        meta:
+          # json representation of the Meta Data
+          $ref: "#/components/schemas/RecordMeta"
+        blocks:
+          # List of multipart data
+          type: array
+          description: list of opaque Block's in this Record
+          items:
+            $ref: "#/components/schemas/Block"
+          minItems: 1
+      required:
+        - meta
+      example: >-
+        {"meta": { "tags" : {"tag1" : ["value1"], "tag2" :["value2"] } }, "blocks": [{"Content-ID": "userDefBinaryBlob", "Content-Type": "text/plain", "content": "QmxvY2sgY29udGVudA=="}, {"Content-Id": "userDefJsonBlob", "Content-Type": "application/json", "content": "{"key": "ftsimpletype-999550000000002", "value": "A3E71A78377179B5B91A;imsi-999550000000123"}]}
+    Block:
+      description: A Block can be of any type
+      example: >-
+        "QmxvY2sgY29udGVudA=="
+    RecordMeta:
+      description: Meta data of a Record
+      type: object
+      properties:
+        ttl:
+          $ref: "TS29571_CommonData.yaml#/components/schemas/DateTime"
+        callbackReference:
+          $ref: "TS29571_CommonData.yaml#/components/schemas/Uri"
+        tags:
+          type: object # dictionary type
+          description: >-
+            A dictionary of {"tagName": [ "tagValue", ...] }. A tag name can be used to retrieve a Record. The tagValue are unique.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+            uniqueItems: true
+          example: '{"ueId" : [ "455345", "455346" ], "recordId" : [ "1000106" ] }'
+      example: >-
+        { "tags" : {"ueId" : [ "455345", "455346" ], "recordId" : [ "1000106" ] }}
+
