@@ -32,7 +32,7 @@ paths:
       description: Create or Modify correlation between ueId and subIDs
       operationId: CreateOrModifyCorrelation
       tags:
-        - ueId CRUD
+        - correlation CRUD
       parameters:
         - name: ueId
           in: path
@@ -41,8 +41,14 @@ paths:
           schema:
             $ref: "TS29571_CommonData.yaml#/components/schemas/Supi"
             example: imsi-999559807001001
+
       requestBody:
-        $ref: '#/components/schemas/SubIds'
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubIds"
+        required: true
+
       responses:
         "204":
           description: Successful acknowledgement
@@ -56,9 +62,9 @@ paths:
           description: Unexpected error
     delete:
       summary: Delete a Record with an user provided RecordId
-      operationId: DeleteRecord
+      operationId: DeleteCorrelation
       tags:
-        - Record CRUD
+        - correlation CRUD
       parameters:
         - name: ueId
           in: path
@@ -98,7 +104,7 @@ paths:
         "503":
           $ref: "TS29571_CommonData.yaml#/components/responses/503"
         default:
-          $ref: "TS29571_CommonData.yaml#/components/responses/default"    
+          $ref: "TS29571_CommonData.yaml#/components/responses/default"
   /location/{subId}:
     summary: Last reported location
     description: Retrieve the last reported location of the subId
@@ -107,8 +113,7 @@ paths:
       summary: Get last reported location
       description: Get the last reported location of the subId
       tags:
-        - subscriber
-        - location
+        - location CRUD
       parameters:
         - name: subId
           in: path
@@ -143,7 +148,7 @@ paths:
     get:
       summary: Records search with get
       description: Retrieve Record based on filter
-      operationId: SearchRecord
+      operationId: SearchAllSubRecord
       tags:
         - Record CRUD
       parameters:
@@ -174,7 +179,7 @@ paths:
               schema:
                 type: array
                 items:
-                    $ref: "#/components/schemas/Record"
+                  $ref: "#/components/schemas/Record"
                 minItems: 1
         "204":
           description: >-
@@ -200,11 +205,11 @@ paths:
   /storage/{subId}/records/{recordId}:
     summary: Access to a specific Record, identified by its RecordId
     description: >-
-      Access to a specific Record        
+      Access to a specific Record
     put:
       summary: Create/Modify Record
       description: Create or Modify a Record with a user provided ueId
-      operationId: CreateOrModifyRecord
+      operationId: CreateOrModifySubRecord
       tags:
         - Record CRUD
       parameters:
@@ -214,7 +219,7 @@ paths:
           required: true
           schema:
             type: string
-            example: 'UserRecordValue000000001'
+            example: "UserRecordValue000000001"
         - name: subId
           in: path
           description: subId
@@ -223,7 +228,12 @@ paths:
             type: string
             example: ID-123456789
       requestBody:
-        $ref: "#/components/schemas/Record"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Record"
+        required: true
+
       responses:
         "200": # Update with return
           $ref: "#/components/schemas/Record"
@@ -255,7 +265,7 @@ paths:
     get:
       summary: Records search with get
       description: Retrieve Record based on filter
-      operationId: SearchRecord
+      operationId: SearchSubRecord
       tags:
         - Record CRUD
       parameters:
@@ -272,7 +282,7 @@ paths:
           required: true
           schema:
             type: string
-            example: 'UserRecordValue000000001'
+            example: "UserRecordValue000000001"
       responses:
         "200":
           description: Successful case. Response contains result of the search.
@@ -303,7 +313,7 @@ paths:
           $ref: "TS29571_CommonData.yaml#/components/responses/default"
     delete:
       summary: Delete a Record with an user provided RecordId
-      operationId: DeleteRecord
+      operationId: DeleteSubRecord
       tags:
         - Record CRUD
       parameters:
@@ -320,7 +330,7 @@ paths:
           required: true
           schema:
             type: string
-            example: 'UserRecordValue000000001'
+            example: "UserRecordValue000000001"
       responses:
         "200":
           description: Successful case.
@@ -346,11 +356,16 @@ paths:
 components:
   schemas:
     SubIds:
-      type: array
-      items:
-        type: string
-      minItems: 1
-      uniqueItems: true
+      type: object
+      required:
+        - subIds
+      properties:
+        subIds:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          uniqueItems: true
     LocationResponse:
       type: object
       properties:
@@ -512,4 +527,3 @@ components:
           example: '{"ueId" : [ "455345", "455346" ], "recordId" : [ "1000106" ] }'
       example: >-
         { "tags" : {"ueId" : [ "455345", "455346" ], "recordId" : [ "1000106" ] }}
-
